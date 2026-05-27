@@ -25,14 +25,32 @@
         }
         h1 { color: #2c3e50; font-size: 24px; margin-bottom: 10px;}
         p { color: #7f8c8d; margin-bottom: 30px; line-height: 1.5; }
+        
+        /* ✨ 드래그 앤 드롭 박스 디자인 */
         .upload-box { 
             border: 2px dashed #bdc3c7; 
-            padding: 20px; 
+            padding: 40px 20px; 
             border-radius: 10px; 
             background: #fafafa; 
             margin-bottom: 20px;
+            cursor: pointer;
+            transition: 0.3s;
         }
-        input[type="file"] { margin-top: 10px; }
+        /* 마우스를 올리거나 파일을 끌고 왔을 때 변하는 색상 */
+        .upload-box:hover, .upload-box.dragover {
+            border-color: #3498db;
+            background-color: #ebf5fb;
+        }
+        
+        input[type="file"] { display: none; /* 못생긴 기본 파일버튼 숨기기 */ }
+        
+        #fileName {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+            color: #2980b9;
+        }
+
         button { 
             background: #3498db; 
             color: white; 
@@ -46,6 +64,8 @@
             transition: 0.3s;
         }
         button:hover { background: #2980b9; }
+        button:disabled { background: #95a5a6; cursor: not-allowed; }
+        
         #loading { 
             display: none; 
             margin-top: 20px; 
@@ -63,25 +83,60 @@
     <h1>👩‍⚕️ 병동 간호사 스마트 스케줄러</h1>
     <p>수간호사 선생님의 스트레스를 0으로!<br>작성된 엑셀 파일을 올리면 AI가 최적의 듀티를 짭니다.</p>
 
-    <div class="upload-box">
-        <label for="fileInput">📂 <b>엑셀 양식 업로드 (.xlsx)</b></label><br>
+    <div class="upload-box" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        📂 <b>이곳을 클릭하거나<br>엑셀 파일을 끌어다 놓으세요 (.xlsx)</b>
         <input type="file" id="fileInput" accept=".xlsx">
+        <span id="fileName"></span>
     </div>
 
-    <button onclick="calculateDuty()">🚀 AI 근무표 생성 시작</button>
+    <button id="submitBtn" onclick="calculateDuty()">🚀 AI 근무표 생성 시작</button>
     
     <div id="loading">⏳ 듀티가 수백만 개의 경우의 수를 계산 중입니다...<br>(최대 5분 소요, 창을 닫지 마세요)</div>
     <div id="result-message"></div>
 </div>
 
 <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileNameDisplay = document.getElementById('fileName');
+
+    // ✨ 파일을 끌고 영역에 들어왔을 때
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    // ✨ 파일을 끌고 영역 밖으로 나갔을 때
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+    });
+
+    // ✨ 파일을 영역에 마우스에서 손을 떼어 놓았을 때 (Drop)
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        
+        if (e.dataTransfer.files.length > 0) {
+            fileInput.files = e.dataTransfer.files;
+            fileNameDisplay.innerHTML = "✅ 선택된 파일:<br>" + fileInput.files[0].name;
+        }
+    });
+
+    // ✨ 클릭해서 파일을 선택했을 때
+    fileInput.addEventListener('change', () => {
+        if(fileInput.files.length > 0) {
+            fileNameDisplay.innerHTML = "✅ 선택된 파일:<br>" + fileInput.files[0].name;
+        }
+    });
+
     async function calculateDuty() {
-        const fileInput = document.getElementById('fileInput');
-        const loadingDiv = document.getElementById('loading');
         const resultDiv = document.getElementById('result-message');
+        const loadingDiv = document.getElementById('loading');
+        const submitBtn = document.getElementById('submitBtn');
 
         if (fileInput.files.length === 0) {
-            alert('🚨 먼저 엑셀 파일을 업로드해 주세요!');
+            alert('🚨 먼저 엑셀 파일을 끌어다 놓거나 선택해 주세요!');
             return;
         }
 
@@ -89,14 +144,14 @@
         const formData = new FormData();
         formData.append('file', file);
 
-        // 로딩 화면 표시
+        // 로딩 시작
         loadingDiv.style.display = 'block';
         resultDiv.innerHTML = '';
+        submitBtn.disabled = true;
 
         try {
-            // ⭐ [핵심 미션] 아래 큰따옴표 안에 구글 클라우드에서 받은 진짜 URL을 붙여넣으세요!
-            // 주의: 맨 뒤에 /calculate/ 는 반드시 남겨두어야 합니다!
-            const apiUrl = "https://dut-web-617579356172.asia-northeast3.run.app/calculate/"; 
+            // ⭐ 반드시 선생님의 구글 Cloud Run 주소로 바꿔주세요! (끝에 /calculate/ 유지)
+            const apiUrl = "https://선생님의-구글-클라우드-주소.a.run.app/calculate/"; 
 
             const response = await fetch(apiUrl, {
                 method: 'POST',
@@ -104,7 +159,6 @@
             });
 
             if (response.ok) {
-                // 완성된 엑셀 파일 다운로드 시키기
                 const blob = await response.blob();
                 const downloadUrl = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -126,7 +180,8 @@
             resultDiv.innerHTML = "🚨 서버와 연결할 수 없습니다. 다시 시도해주세요.";
             console.error(error);
         } finally {
-            loadingDiv.style.display = 'none'; // 로딩 화면 숨기기
+            loadingDiv.style.display = 'none';
+            submitBtn.disabled = false;
         }
     }
 </script>
