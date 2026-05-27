@@ -11,8 +11,10 @@
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            height: 100vh; 
+            min-height: 100vh; 
             margin: 0; 
+            padding: 20px;
+            box-sizing: border-box;
         }
         .container { 
             background: white; 
@@ -20,13 +22,26 @@
             border-radius: 15px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
             text-align: center; 
-            max-width: 500px; 
-            width: 90%; 
+            max-width: 600px; 
+            width: 100%; 
         }
         h1 { color: #2c3e50; font-size: 24px; margin-bottom: 10px;}
-        p { color: #7f8c8d; margin-bottom: 30px; line-height: 1.5; }
+        p { color: #7f8c8d; margin-bottom: 20px; line-height: 1.5; }
         
-        /* ✨ 드래그 앤 드롭 박스 디자인 */
+        .download-btn {
+            display: inline-block;
+            background: #e8f4f8;
+            color: #2980b9;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-bottom: 25px;
+            border: 1px solid #bce0fd;
+            transition: 0.2s;
+        }
+        .download-btn:hover { background: #d0eaf9; }
+
         .upload-box { 
             border: 2px dashed #bdc3c7; 
             padding: 40px 20px; 
@@ -36,22 +51,11 @@
             cursor: pointer;
             transition: 0.3s;
         }
-        /* 마우스를 올리거나 파일을 끌고 왔을 때 변하는 색상 */
-        .upload-box:hover, .upload-box.dragover {
-            border-color: #3498db;
-            background-color: #ebf5fb;
-        }
-        
-        input[type="file"] { display: none; /* 못생긴 기본 파일버튼 숨기기 */ }
-        
-        #fileName {
-            display: block;
-            margin-top: 15px;
-            font-weight: bold;
-            color: #2980b9;
-        }
+        .upload-box:hover, .upload-box.dragover { border-color: #3498db; background-color: #ebf5fb; }
+        input[type="file"] { display: none; }
+        #fileName { display: block; margin-top: 15px; font-weight: bold; color: #2980b9; }
 
-        button { 
+        .submit-btn { 
             background: #3498db; 
             color: white; 
             border: none; 
@@ -63,36 +67,46 @@
             font-weight: bold;
             transition: 0.3s;
         }
-        button:hover { background: #2980b9; }
-        button:disabled { background: #95a5a6; cursor: not-allowed; }
+        .submit-btn:hover { background: #2980b9; }
+        .submit-btn:disabled { background: #95a5a6; cursor: not-allowed; }
         
-        #loading { 
-            display: none; 
-            margin-top: 20px; 
-            color: #e67e22; 
-            font-weight: bold; 
-            animation: blink 1.5s infinite;
-        }
-        #result-message { margin-top: 20px; font-weight: bold; }
+        #loading { display: none; margin-top: 20px; color: #e67e22; font-weight: bold; animation: blink 1.5s infinite; }
         @keyframes blink { 50% { opacity: 0.5; } }
+
+        /* 벌점 영수증 스타일 */
+        #receipt-box {
+            display: none;
+            margin-top: 25px;
+            padding: 20px;
+            background: #fff9f9;
+            border: 1px solid #ffcccc;
+            border-radius: 10px;
+            text-align: left;
+        }
+        .receipt-title { font-weight: bold; font-size: 18px; color: #c0392b; margin-bottom: 15px; border-bottom: 2px solid #ffcccc; padding-bottom: 10px;}
+        .receipt-item { color: #555; margin-bottom: 8px; font-size: 14px; }
+        .perfect-score { color: #27ae60; font-weight: bold; text-align: center; padding: 15px; background: #eafaf1; border-radius: 8px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>👩‍⚕️ 병동 간호사 스마트 스케줄러</h1>
-    <p>수간호사 선생님의 스트레스를 0으로!<br>작성된 엑셀 파일을 올리면 AI가 최적의 듀티를 짭니다.</p>
+    <p>수간호사 선생님의 스트레스를 0으로!<br>엑셀 파일을 올리면 AI가 최적의 근무표를 짜줍니다.</p>
+
+    <a href="근무표 양식.xlsx" download class="download-btn">📝 빈 근무표 엑셀 양식 다운로드</a>
 
     <div class="upload-box" id="dropZone" onclick="document.getElementById('fileInput').click()">
-        📂 <b>이곳을 클릭하거나<br>엑셀 파일을 끌어다 놓으세요 (.xlsx)</b>
+        📂 <b>이곳을 클릭하거나<br>작성한 엑셀 파일을 끌어다 놓으세요</b>
         <input type="file" id="fileInput" accept=".xlsx">
         <span id="fileName"></span>
     </div>
 
-    <button id="submitBtn" onclick="calculateDuty()">🚀 AI 근무표 생성 시작</button>
+    <button class="submit-btn" id="submitBtn" onclick="calculateDuty()">🚀 AI 근무표 생성 시작</button>
     
     <div id="loading">⏳ 듀티가 수백만 개의 경우의 수를 계산 중입니다...<br>(최대 5분 소요, 창을 닫지 마세요)</div>
-    <div id="result-message"></div>
+    
+    <div id="receipt-box"></div>
 </div>
 
 <script>
@@ -100,38 +114,23 @@
     const fileInput = document.getElementById('fileInput');
     const fileNameDisplay = document.getElementById('fileName');
 
-    // ✨ 파일을 끌고 영역에 들어왔을 때
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('dragover');
-    });
-
-    // ✨ 파일을 끌고 영역 밖으로 나갔을 때
-    dropZone.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('dragover');
-    });
-
-    // ✨ 파일을 영역에 마우스에서 손을 떼어 놓았을 때 (Drop)
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); });
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
         dropZone.classList.remove('dragover');
-        
         if (e.dataTransfer.files.length > 0) {
             fileInput.files = e.dataTransfer.files;
             fileNameDisplay.innerHTML = "✅ 선택된 파일:<br>" + fileInput.files[0].name;
         }
     });
 
-    // ✨ 클릭해서 파일을 선택했을 때
     fileInput.addEventListener('change', () => {
-        if(fileInput.files.length > 0) {
-            fileNameDisplay.innerHTML = "✅ 선택된 파일:<br>" + fileInput.files[0].name;
-        }
+        if(fileInput.files.length > 0) fileNameDisplay.innerHTML = "✅ 선택된 파일:<br>" + fileInput.files[0].name;
     });
 
     async function calculateDuty() {
-        const resultDiv = document.getElementById('result-message');
+        const receiptBox = document.getElementById('receipt-box');
         const loadingDiv = document.getElementById('loading');
         const submitBtn = document.getElementById('submitBtn');
 
@@ -140,26 +139,30 @@
             return;
         }
 
-        const file = fileInput.files[0];
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('file', fileInput.files[0]);
 
-        // 로딩 시작
         loadingDiv.style.display = 'block';
-        resultDiv.innerHTML = '';
+        receiptBox.style.display = 'none';
         submitBtn.disabled = true;
 
         try {
             // ⭐ 반드시 선생님의 구글 Cloud Run 주소로 바꿔주세요! (끝에 /calculate/ 유지)
-            const apiUrl = "https://dut-web-617579356172.asia-northeast3.run.app/calculate/"; 
+            const apiUrl = "https://선생님의-구글-클라우드-주소.a.run.app/calculate/"; 
 
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                body: formData
-            });
+            const response = await fetch(apiUrl, { method: 'POST', body: formData });
+            const data = await response.json();
 
-            if (response.ok) {
-                const blob = await response.blob();
+            if (response.ok && data.success) {
+                // 1. 엑셀 파일 다운로드 실행
+                const byteCharacters = atob(data.file_b64);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+                
                 const downloadUrl = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = downloadUrl;
@@ -168,16 +171,22 @@
                 a.click();
                 a.remove();
                 
-                resultDiv.style.color = "green";
-                resultDiv.innerHTML = "✅ 성공! 근무표가 다운로드되었습니다. 🎉";
+                // 2. 영수증 화면 그리기
+                receiptBox.style.display = 'block';
+                if (data.total_penalty === 0) {
+                    receiptBox.innerHTML = `<div class="perfect-score">🎉 완벽합니다! 감점된 항목이 하나도 없습니다!</div>`;
+                } else {
+                    let receiptHTML = `<div class="receipt-title">🧾 AI 스케줄러 벌점 내역 (총 ${data.total_penalty}점)</div>`;
+                    data.receipt.forEach(item => {
+                        receiptHTML += `<div class="receipt-item">📉 ${item.reason} (총 ${item.count}건) : <b>${item.cost}점 감점</b></div>`;
+                    });
+                    receiptBox.innerHTML = receiptHTML;
+                }
             } else {
-                const errorData = await response.json();
-                resultDiv.style.color = "red";
-                resultDiv.innerHTML = "🚨 에러 발생: " + errorData.error;
+                alert("🚨 에러 발생: " + (data.error || "알 수 없는 오류"));
             }
         } catch (error) {
-            resultDiv.style.color = "red";
-            resultDiv.innerHTML = "🚨 서버와 연결할 수 없습니다. 다시 시도해주세요.";
+            alert("🚨 서버와 연결할 수 없거나 시간이 초과되었습니다.");
             console.error(error);
         } finally {
             loadingDiv.style.display = 'none';
