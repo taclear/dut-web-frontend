@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👩‍⚕️ Du-T 병동 간호사 스케줄러</title>
+    <style>
+        body { 
+            font-family: 'Malgun Gothic', sans-serif; 
+            background-color: #f0f4f8; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+        }
+        .container { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            text-align: center; 
+            max-width: 500px; 
+            width: 90%; 
+        }
+        h1 { color: #2c3e50; font-size: 24px; margin-bottom: 10px;}
+        p { color: #7f8c8d; margin-bottom: 30px; line-height: 1.5; }
+        .upload-box { 
+            border: 2px dashed #bdc3c7; 
+            padding: 20px; 
+            border-radius: 10px; 
+            background: #fafafa; 
+            margin-bottom: 20px;
+        }
+        input[type="file"] { margin-top: 10px; }
+        button { 
+            background: #3498db; 
+            color: white; 
+            border: none; 
+            padding: 15px 30px; 
+            font-size: 16px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            width: 100%;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        button:hover { background: #2980b9; }
+        #loading { 
+            display: none; 
+            margin-top: 20px; 
+            color: #e67e22; 
+            font-weight: bold; 
+            animation: blink 1.5s infinite;
+        }
+        #result-message { margin-top: 20px; font-weight: bold; }
+        @keyframes blink { 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>👩‍⚕️ 병동 간호사 스마트 스케줄러</h1>
+    <p>수간호사 선생님의 스트레스를 0으로!<br>작성된 엑셀 파일을 올리면 AI가 최적의 듀티를 짭니다.</p>
+
+    <div class="upload-box">
+        <label for="fileInput">📂 <b>엑셀 양식 업로드 (.xlsx)</b></label><br>
+        <input type="file" id="fileInput" accept=".xlsx">
+    </div>
+
+    <button onclick="calculateDuty()">🚀 AI 근무표 생성 시작</button>
+    
+    <div id="loading">⏳ 듀티가 수백만 개의 경우의 수를 계산 중입니다...<br>(최대 5분 소요, 창을 닫지 마세요)</div>
+    <div id="result-message"></div>
+</div>
+
+<script>
+    async function calculateDuty() {
+        const fileInput = document.getElementById('fileInput');
+        const loadingDiv = document.getElementById('loading');
+        const resultDiv = document.getElementById('result-message');
+
+        if (fileInput.files.length === 0) {
+            alert('🚨 먼저 엑셀 파일을 업로드해 주세요!');
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // 로딩 화면 표시
+        loadingDiv.style.display = 'block';
+        resultDiv.innerHTML = '';
+
+        try {
+            // ⭐ [핵심 미션] 아래 큰따옴표 안에 구글 클라우드에서 받은 진짜 URL을 붙여넣으세요!
+            // 주의: 맨 뒤에 /calculate/ 는 반드시 남겨두어야 합니다!
+            const apiUrl = "https://dut-web-617579356172.asia-northeast3.run.app/calculate/"; 
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                // 완성된 엑셀 파일 다운로드 시키기
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = '완성된_Du-T_근무표.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                
+                resultDiv.style.color = "green";
+                resultDiv.innerHTML = "✅ 성공! 근무표가 다운로드되었습니다. 🎉";
+            } else {
+                const errorData = await response.json();
+                resultDiv.style.color = "red";
+                resultDiv.innerHTML = "🚨 에러 발생: " + errorData.error;
+            }
+        } catch (error) {
+            resultDiv.style.color = "red";
+            resultDiv.innerHTML = "🚨 서버와 연결할 수 없습니다. 다시 시도해주세요.";
+            console.error(error);
+        } finally {
+            loadingDiv.style.display = 'none'; // 로딩 화면 숨기기
+        }
+    }
+</script>
+
+</body>
+</html>
