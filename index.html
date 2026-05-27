@@ -92,9 +92,9 @@
 
 <div class="container">
     <h1>👩‍⚕️ 병동 간호사 스마트 스케줄러</h1>
-    <p>수간호사 선생님의 스트레스를 0으로!<br>엑셀 파일을 올리면 AI가 최적의 근무표를 짜줍니다.</p>
+    <p>수간호사 선생님의 스트레스를 0으로!<br>엑셀 파일을 올리면 듀티가 최적의 근무표를 짜줍니다.</p>
 
-    <a href="근무표 양식.xlsx" download class="download-btn">📝 빈 근무표 엑셀 양식 다운로드</a>
+    <a href="template.xlsx" download="기본_근무표_양식.xlsx" class="download-btn">📝 빈 근무표 엑셀 양식 다운로드</a>
 
     <div class="upload-box" id="dropZone" onclick="document.getElementById('fileInput').click()">
         📂 <b>이곳을 클릭하거나<br>작성한 엑셀 파일을 끌어다 놓으세요</b>
@@ -102,7 +102,7 @@
         <span id="fileName"></span>
     </div>
 
-    <button class="submit-btn" id="submitBtn" onclick="calculateDuty()">🚀 AI 근무표 생성 시작</button>
+    <button class="submit-btn" id="submitBtn" onclick="calculateDuty()">🚀 듀티 근무표 생성 시작</button>
     
     <div id="loading">⏳ 듀티가 수백만 개의 경우의 수를 계산 중입니다...<br>(최대 5분 소요, 창을 닫지 마세요)</div>
     
