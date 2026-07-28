@@ -83,6 +83,19 @@
             border-radius: 10px;
             text-align: left;
         }
+        /* 반영되지 않은 신청 알림 */
+        #warning-box {
+            display: none;
+            margin-top: 25px;
+            padding: 18px 20px;
+            background: #fffbea;
+            border: 1px solid #f6d97a;
+            border-radius: 10px;
+            text-align: left;
+        }
+        .warn-title { font-weight: bold; font-size: 16px; color: #b7791f; margin-bottom: 10px; }
+        .warn-item { color: #5f5540; font-size: 14px; line-height: 1.5; margin-bottom: 6px; }
+
         .receipt-title { font-weight: bold; font-size: 18px; color: #c0392b; margin-bottom: 15px; border-bottom: 2px solid #ffcccc; padding-bottom: 10px;}
         .receipt-item { color: #555; margin-bottom: 8px; font-size: 14px; }
         .perfect-score { color: #27ae60; font-weight: bold; text-align: center; padding: 15px; background: #eafaf1; border-radius: 8px; }
@@ -106,6 +119,7 @@
     
     <div id="loading">⏳ 듀티가 수백만 개의 경우의 수를 계산 중입니다...<br>(최대 5분 소요, 창을 닫지 마세요)</div>
     
+    <div id="warning-box"></div>
     <div id="receipt-box"></div>
 </div>
 
@@ -175,6 +189,17 @@
                 
                 // 2. 영수증 화면 그리기
                 receiptBox.style.display = 'block';
+
+                // 반영되지 않은 신청이 있으면 먼저 알려준다
+                const warnBox = document.getElementById('warning-box');
+                if (data.warnings && data.warnings.length > 0) {
+                    warnBox.style.display = 'block';
+                    warnBox.innerHTML = '<div class="warn-title">⚠️ 확인이 필요합니다</div>' +
+                        data.warnings.map(w => `<div class="warn-item">${w}</div>`).join('');
+                } else {
+                    warnBox.style.display = 'none';
+                }
+
                 if (data.total_penalty === 0) {
                     receiptBox.innerHTML = `<div class="perfect-score">🎉 완벽합니다! 감점된 항목이 하나도 없습니다!</div>`;
                 } else {
