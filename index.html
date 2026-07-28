@@ -92,7 +92,7 @@
 
 <div class="container">
     <h1>👩‍⚕️ 병동 간호사 스마트 스케줄러</h1>
-    <p>수간호사 선생님의 스트레스를 0으로!<br>엑셀 파일을 올리면 듀티가 최적의 근무표를 짜줍니다.</p>
+    <p>엑셀 파일을 올리면 듀티가 최적의 근무표를 짜줍니다.</p>
 
     <a href="template.xlsx" download="기본_근무표_양식.xlsx" class="download-btn">📝 빈 근무표 엑셀 양식 다운로드</a>
 
@@ -180,7 +180,8 @@
                 } else {
                     let receiptHTML = `<div class="receipt-title">🧾 AI 스케줄러 벌점 내역 (총 ${data.total_penalty}점)</div>`;
                     data.receipt.forEach(item => {
-                        receiptHTML += `<div class="receipt-item">📉 ${item.reason} (총 ${item.count}건) : <b>${item.cost}점 감점</b></div>`;
+                        const amount = item.count_label || `${item.count}건`;
+                        receiptHTML += `<div class="receipt-item">📉 ${item.reason} (${amount}) : <b>${item.cost}점 감점</b></div>`;
                     });
                     receiptBox.innerHTML = receiptHTML;
                 }
