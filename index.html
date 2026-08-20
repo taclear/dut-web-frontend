@@ -94,7 +94,11 @@
             text-align: left;
         }
         .warn-title { font-weight: bold; font-size: 16px; color: #b7791f; margin-bottom: 10px; }
-        .warn-item { color: #5f5540; font-size: 14px; line-height: 1.5; margin-bottom: 6px; }
+        .warn-item { color: #5f5540; font-size: 14px; line-height: 1.6; margin-bottom: 6px; }
+        /* 실패 안내는 붉은 계열로 구분 */
+        #warning-box.is-error { background: #fff5f5; border-color: #f5b5b5; }
+        #warning-box.is-error .warn-title { color: #c0392b; }
+        #warning-box.is-error .warn-item { color: #5f4040; }
 
         .receipt-title { font-weight: bold; font-size: 18px; color: #c0392b; margin-bottom: 15px; border-bottom: 2px solid #ffcccc; padding-bottom: 10px;}
         .receipt-item { color: #555; margin-bottom: 8px; font-size: 14px; }
@@ -192,6 +196,7 @@
 
                 // 반영되지 않은 신청이 있으면 먼저 알려준다
                 const warnBox = document.getElementById('warning-box');
+                warnBox.className = '';
                 if (data.warnings && data.warnings.length > 0) {
                     warnBox.style.display = 'block';
                     warnBox.innerHTML = '<div class="warn-title">⚠️ 확인이 필요합니다</div>' +
@@ -214,7 +219,13 @@
                 const msg = (data && data.error)
                     ? data.error
                     : `서버 응답 오류 (코드 ${response.status}) — 잠시 후 다시 시도해 주세요.`;
-                alert("🚨 에러 발생: " + msg);
+                // 안내가 여러 줄인 경우가 많아 화면에 그대로 보여준다 (알림창은 줄바꿈이 잘 안 보임)
+                const errBox = document.getElementById('warning-box');
+                errBox.style.display = 'block';
+                errBox.className = 'is-error';
+                errBox.innerHTML = '<div class="warn-title">🚨 확인해 주세요</div>' +
+                    `<div class="warn-item">${msg.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>')}</div>`;
+                errBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         } catch (error) {
             alert("🚨 서버와 연결할 수 없거나 시간이 초과되었습니다.");
